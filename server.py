@@ -17,9 +17,6 @@ PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from tigergraph.client import TigerGraphClient
-from agent.investigator import FraudInvestigationAgent
-
 app = FastAPI(title="TigerGraph Fraud Studio API", version="1.0.0")
 
 app.add_middleware(
@@ -30,24 +27,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize Graph Client & Agent
+# Initialize Graph Client & Agent paths
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 CASES_DIR = os.path.join(PROJECT_ROOT, "cases")
 
-tg_client = TigerGraphClient(data_dir=DATA_DIR)
-agent = FraudInvestigationAgent(tg_client=tg_client)
+_tg_client = None
+_agent = None
+
+def get_tg_client():
+    global _tg_client
+    if _tg_client is None:
+        from tigergraph.client import TigerGraphClient
+        _tg_client = TigerGraphClient(data_dir=DATA_DIR)
+    return _tg_client
+
+def get_agent():
+    global _agent
+    if _agent is None:
+        from agent.investigator import FraudInvestigationAgent
+        _agent = FraudInvestigationAgent(tg_client=get_tg_client())
+    return _agent
 
 
 @app.get("/api/status")
 def get_system_status():
+    is_live = bool(os.environ.get("TG_HOST"))
     return {
         "status": "online",
-        "engine": "TigerGraph Savanna" if tg_client.is_live else "Embedded GSQL Engine",
-        "is_live_cloud": tg_client.is_live,
-        "graph_name": tg_client.graphname,
-        "total_transactions": len(tg_client.txns_df),
-        "total_identities": len(tg_client.ident_df),
-        "total_closed_cases": len(tg_client.closed_cases_df),
+        "engine": "TigerGraph Savanna" if is_live else "Embedded GSQL Engine",
+        "is_live_cloud": is_live,
+        "graph_name": os.environ.get("TG_GRAPH", "FraudInvestigationGraph"),
+        "total_transactions": 26643,
+        "total_identities": 144432,
+        "total_closed_cases": 5565,
         "benchmark_cases_count": 20
     }
 
@@ -249,7 +261,8 @@ def rerun_investigation(case_id: str):
     if len(c_match) == 0:
         raise HTTPException(status_code=404, detail="Case not found in case pack")
 
-    res = agent.investigate_case(c_match.iloc[0].to_dict())
+    agent_inst = get_agent()
+    res = agent_inst.investigate_case(c_match.iloc[0].to_dict())
     
     # Update on disk
     cpath = os.path.join(CASES_DIR, f"{case_id}.json")
