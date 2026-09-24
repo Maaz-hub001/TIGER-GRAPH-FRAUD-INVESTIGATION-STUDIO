@@ -1,0 +1,128 @@
+{
+  "case_id": "HHG-019",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.91,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3503878"
+    ],
+    "first_suspicious_txn_id": "3503878",
+    "connected_card_ids": [
+      "C01104-K1",
+      "C01983-K1",
+      "C06224-K1",
+      "C07987-K1",
+      "C11309-K1"
+    ],
+    "connected_device_profiles": [
+      "Windows | other | chrome 61.0 | 1280x720"
+    ],
+    "exposure_usd": 99.92,
+    "evidence": [
+      {
+        "claim": "High risk online transaction from unverified new device profile (Windows | other | chrome 61.0 | 1280x720)",
+        "source": "graph",
+        "ref": "query:device_neighbors(device_id='Windows | other | chrome 61.0 | 1280x720')",
+        "entity_ids": [
+          "3503878"
+        ]
+      },
+      {
+        "claim": "Cardholder confirmed they did not make this online transaction and retain physical card",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": []
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-2011",
+      "CC-2087",
+      "CC-2860",
+      "CC-5026"
+    ],
+    "summary": "Investigation for HHG-019 on card C07987-K2 (Customer C07987) concluded with verdict 'fraud' and pattern 'card_not_present_new_device'. Assessed fraud probability is 0.91 with total exposure of $99.92. Recommended actions: BLOCK_CARD, CREATE_CASE, FILE_REPORT, MONITOR_CONNECTED_CARDS.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9019"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 4,
+      "assumed_response": "Cardholder states they did not authorize this purchase and remained in possession of physical card."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R6: Multi-card compromise linked by shared device/origin"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R6: Coordinated shared origin activity requires regulatory SAR"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: Place all connected cards sharing the origin under monitoring"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R6: Decline flagged transaction on compromised origin"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Policy: Confirmed unauthorized use; exposure $99.92"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Confirmed unauthorized activity; internal case created"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/R6/R9 & Policy 3a: Confirmed unauthorized use linked by shared device/origin to other cards"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: Place all connected cards linked to shared origin under monitoring"
+      }
+    ],
+    "what_changed": "Customer denial and graph evidence increased fraud confidence to 0.91, escalating action to BLOCK_CARD with FILE_REPORT under Policy Rules."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/R6/R9 & Policy 3a: Confirmed unauthorized use linked by shared device/origin to other cards",
+    "narrative": "On 2016-12-01, customer account C07987 on card C07987-K2 incurred unauthorized activity totaling $99.92. Transaction 3503878 was executed via online channel under product category 'R' in billing region 264.0. Graph traversal identified that the activity originated from an unverified source inconsistent with the cardholder's historical baseline. When contacted for validation, the customer explicitly denied authorizing the transaction and confirmed physical retention of the card. The pattern represents unauthorized card-not-present exploitation. The compromised card was blocked, reissue initiated, and funds protected under Policy Rule R2.",
+    "subjects": [
+      "C07987",
+      "C07987-K2",
+      "Windows | other | chrome 61.0 | 1280x720",
+      "C01104-K1",
+      "C01983-K1",
+      "C06224-K1",
+      "C07987-K1",
+      "C11309-K1"
+    ],
+    "total_amount_usd": 99.92,
+    "activity_dates": [
+      "2016-12-01",
+      "2016-12-01"
+    ]
+  },
+  "stop_reason": "Customer denial confirmed unauthorized online purchase from unverified new device.",
+  "tool_calls": 5,
+  "tokens": 4000,
+  "latency_s": 0.11
+}

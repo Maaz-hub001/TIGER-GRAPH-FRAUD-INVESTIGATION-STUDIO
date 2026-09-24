@@ -1,0 +1,85 @@
+{
+  "case_id": "HHG-009",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.88,
+    "pattern": "card_not_present_fraud",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3581141"
+    ],
+    "first_suspicious_txn_id": "3581141",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 30.02,
+    "evidence": [
+      {
+        "claim": "Cardholder explicitly reported and denied authorizing transaction of $30.02 via online channel",
+        "source": "customer",
+        "ref": "trigger:customer_report",
+        "entity_ids": [
+          "3581141"
+        ]
+      },
+      {
+        "claim": "Authorization is anomalous against customer profile (Product S, Device: None)",
+        "source": "graph",
+        "ref": "query:customer_card_profile(customer_id='C08299')",
+        "entity_ids": [
+          "C08299-K1"
+        ]
+      }
+    ],
+    "similar_prior_cases": [],
+    "summary": "Investigation for HHG-009 on card C08299-K1 (Customer C08299) concluded with verdict 'fraud' and pattern 'card_not_present_fraud'. Assessed fraud probability is 0.88 with total exposure of $30.02. Recommended actions: BLOCK_CARD, CREATE_CASE.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9009"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 4,
+      "assumed_response": "Cardholder states they did not authorize this purchase and remained in possession of physical card."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: Customer report received, verify details and confirm card possession"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Customer dispute received, create internal case"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Policy: Confirmed unauthorized use; exposure $30.02"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Confirmed unauthorized activity; internal case created"
+      }
+    ],
+    "what_changed": "Customer denial and graph evidence increased fraud confidence to 0.88, escalating action to BLOCK_CARD with CREATE_CASE under Policy Rules."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Policy: Activity does not meet SAR filing criteria (legitimate or sub-threshold)",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0.0,
+    "activity_dates": []
+  },
+  "stop_reason": "Cardholder report and investigation confirmed unauthorized transaction (Rule R2).",
+  "tool_calls": 4,
+  "tokens": 3250,
+  "latency_s": 0.04
+}

@@ -1,0 +1,129 @@
+{
+  "case_id": "HHG-015",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.91,
+    "pattern": "card_not_present_new_device",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3464869"
+    ],
+    "first_suspicious_txn_id": "3464869",
+    "connected_card_ids": [
+      "C00681-K1",
+      "C01155-K1",
+      "C02881-K1",
+      "C05292-K1",
+      "C05704-K1",
+      "C11227-K1",
+      "C11413-K1"
+    ],
+    "connected_device_profiles": [
+      "Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050"
+    ],
+    "exposure_usd": 599.94,
+    "evidence": [
+      {
+        "claim": "High risk online transaction from unverified new device profile (Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050)",
+        "source": "graph",
+        "ref": "query:device_neighbors(device_id='Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050')",
+        "entity_ids": [
+          "3464869"
+        ]
+      },
+      {
+        "claim": "Cardholder confirmed they did not make this online transaction and retain physical card",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": []
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0615",
+      "CC-1313",
+      "CC-3886"
+    ],
+    "summary": "Investigation for HHG-015 on card C03042-K1 (Customer C03042) concluded with verdict 'fraud' and pattern 'card_not_present_new_device'. Assessed fraud probability is 0.91 with total exposure of $599.94. Recommended actions: BLOCK_CARD, CREATE_CASE, FILE_REPORT, MONITOR_CONNECTED_CARDS.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9015"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 4,
+      "assumed_response": "Cardholder states they did not authorize this purchase and remained in possession of physical card."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R6: Multi-card compromise linked by shared device/origin"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R6: Coordinated shared origin activity requires regulatory SAR"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: Place all connected cards sharing the origin under monitoring"
+      },
+      {
+        "action": "DECLINE_TRANSACTION",
+        "route": "L1",
+        "reason": "R6: Decline flagged transaction on compromised origin"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Policy: Confirmed unauthorized use; exposure $599.94"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Confirmed unauthorized activity; internal case created"
+      },
+      {
+        "action": "FILE_REPORT",
+        "route": "L2",
+        "reason": "R2/R6/R9 & Policy 3a: Confirmed unauthorized use linked by shared device/origin to other cards"
+      },
+      {
+        "action": "MONITOR_CONNECTED_CARDS",
+        "route": "auto",
+        "reason": "R6: Place all connected cards linked to shared origin under monitoring"
+      }
+    ],
+    "what_changed": "Customer denial and graph evidence increased fraud confidence to 0.91, escalating action to BLOCK_CARD with FILE_REPORT under Policy Rules."
+  },
+  "sar": {
+    "file": true,
+    "reason": "R2/R6/R9 & Policy 3a: Confirmed unauthorized use linked by shared device/origin to other cards",
+    "narrative": "On 2016-11-17, customer account C03042 on card C03042-K1 incurred unauthorized activity totaling $599.94. Transaction 3464869 was executed via online channel under product category 'R' in billing region 327.0. Graph traversal identified that the activity originated from an unverified source inconsistent with the cardholder's historical baseline. When contacted for validation, the customer explicitly denied authorizing the transaction and confirmed physical retention of the card. The pattern represents unauthorized card-not-present exploitation. The compromised card was blocked, reissue initiated, and funds protected under Policy Rule R2.",
+    "subjects": [
+      "C03042",
+      "C03042-K1",
+      "Trident/7.0 | Windows 8.1 | ie 11.0 for desktop | 1680x1050",
+      "C00681-K1",
+      "C01155-K1",
+      "C02881-K1",
+      "C05292-K1",
+      "C05704-K1"
+    ],
+    "total_amount_usd": 599.94,
+    "activity_dates": [
+      "2016-11-17",
+      "2016-11-17"
+    ]
+  },
+  "stop_reason": "Customer denial confirmed unauthorized online purchase from unverified new device.",
+  "tool_calls": 5,
+  "tokens": 4000,
+  "latency_s": 0.04
+}

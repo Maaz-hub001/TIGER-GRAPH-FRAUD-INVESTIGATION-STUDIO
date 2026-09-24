@@ -1,0 +1,80 @@
+// GSQL Queries for Agentic Fraud Investigation (HHGOA 2026)
+
+USE GRAPH FraudInvestigationGraph;
+
+// 1. Query: card_window - Extract transactions on a card around an event window
+CREATE QUERY card_window(STRING card_id, DATETIME target_ts, INT hours_before, INT hours_after) FOR GRAPH FraudInvestigationGraph {
+    CardSet = {Card.*};
+    TargetCard = SELECT c FROM CardSet:c WHERE c.card_id == card_id;
+    
+    Txns = SELECT t FROM TargetCard:c -(MADE:e)-> Transaction:t
+           WHERE datetime_diff(t.ts, target_ts) >= -hours_before * 3600 
+             AND datetime_diff(t.ts, target_ts) <= hours_after * 3600
+           ORDER BY t.ts ASC;
+           
+    PRINT Txns;
+}
+
+// 2. Query: device_neighbors - Multi-hop syndicate detection finding all cards and customers sharing a device profile
+CREATE QUERY device_neighbors(STRING device_id) FOR GRAPH FraudInvestigationGraph {
+    DeviceSet = {DeviceProfile.*};
+    TargetDevice = SELECT d FROM DeviceSet:d WHERE d.device_id == device_id;
+    
+    ConnectedTxns = SELECT t FROM TargetDevice:d <-(FROM_DEVICE:e)- Transaction:t;
+    ConnectedCards = SELECT c FROM ConnectedTxns:t <-(MADE:e)- Card:c;
+    ConnectedCustomers = SELECT cust FROM ConnectedCards:c <-(OWNS:e)- Customer:cust;
+    
+    PRINT TargetDevice;
+    PRINT ConnectedCards[ConnectedCards.card_id, ConnectedCards.card_network, ConnectedCards.card_type];
+    PRINT ConnectedCustomers[ConnectedCustomers.customer_id];
+    PRINT ConnectedTxns.size() AS total_shared_txns;
+}
+
+// 3. Query: customer_card_profile - Aggregates customer's home region, multi-card links, and historical behavior
+CREATE QUERY customer_card_profile(STRING customer_id) FOR GRAPH FraudInvestigationGraph {
+    CustSet = {Customer.*};
+    TargetCust = SELECT c FROM CustSet:c WHERE c.customer_id == customer_id;
+    
+    Cards = SELECT card FROM TargetCust:c -(OWNS:e)-> Card:card;
+    AllTxns = SELECT t FROM Cards:card -(MADE:e)-> Transaction:t;
+    Regions = SELECT r FROM AllTxns:t -(BILLED_IN:e)-> BillingRegion:r;
+    
+    PRINT TargetCust;
+    PRINT Cards;
+    PRINT AllTxns.size() AS lifetime_txns;
+    PRINT Regions;
+}
+
+// 4. Query: find_similar_cases - Retrieves historical closed cases with matching patterns or cards
+CREATE QUERY find_similar_cases(STRING target_pattern, STRING target_card_id, INT limit_count) FOR GRAPH FraudInvestigationGraph {
+    CaseSet = {ClosedCase.*};
+    
+    // Match by exact pattern or connected card
+    MatchedCases = SELECT cc FROM CaseSet:cc
+                   WHERE cc.pattern == target_pattern OR cc.report_filed == "Yes"
+                   ORDER BY cc.exposure_usd DESC
+                   LIMIT limit_count;
+                   
+    PRINT MatchedCases;
+}
+
+// 5. Query: write_case_to_graph - Agent writes resolved investigation into graph memory
+CREATE QUERY write_case_to_graph(
+    STRING case_id,
+    STRING status,
+    STRING verdict,
+    DOUBLE fraud_prob,
+    STRING pattern,
+    DOUBLE exposure,
+    STRING summary,
+    STRING card_id,
+    STRING flagged_txn_id
+) FOR GRAPH FraudInvestigationGraph {
+    INSERT INTO FraudCase (PRIMARY_ID, status, verdict, fraud_probability, pattern, exposure_usd, summary, closed_at)
+    VALUES (case_id, status, verdict, fraud_prob, pattern, exposure, summary, now());
+    
+    INSERT INTO INVESTIGATES (FROM, TO) VALUES (case_id FraudCase, card_id Card);
+    INSERT INTO FLAGS (FROM, TO) VALUES (case_id FraudCase, flagged_txn_id Transaction);
+    
+    PRINT "Successfully committed case " + case_id + " to TigerGraph knowledge graph." AS result;
+}

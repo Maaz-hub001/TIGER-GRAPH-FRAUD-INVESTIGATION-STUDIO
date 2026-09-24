@@ -1,0 +1,88 @@
+{
+  "case_id": "HHG-001",
+  "case": {
+    "status": "closed_fraud",
+    "verdict": "fraud",
+    "fraud_probability": 0.89,
+    "pattern": "out_of_region_use",
+    "pattern_description": "",
+    "affected_txn_ids": [
+      "3514030"
+    ],
+    "first_suspicious_txn_id": "3514030",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 77.07,
+    "evidence": [
+      {
+        "claim": "In-person transaction in billing region 444.0 occurred concurrently while cardholder active in home region 204.0",
+        "source": "graph",
+        "ref": "query:card_window(card_id='C12382-K1', hours=48)",
+        "entity_ids": [
+          "3514030",
+          "3510225"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-1066",
+      "CC-1673",
+      "CC-2964",
+      "CC-3587"
+    ],
+    "summary": "Investigation for HHG-001 on card C12382-K1 (Customer C12382) concluded with verdict 'fraud' and pattern 'out_of_region_use'. Assessed fraud probability is 0.89 with total exposure of $77.07. Recommended actions: BLOCK_CARD, CREATE_CASE.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9001"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 4,
+      "assumed_response": "Cardholder states they did not authorize this purchase and remained in possession of physical card."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R7: Customer dispute on matching recurring charge pattern"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: Confirm recurring subscription with customer"
+      },
+      {
+        "action": "WARN_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: Provide recurring charge reminder without blocking card"
+      }
+    ],
+    "final": [
+      {
+        "action": "BLOCK_CARD",
+        "route": "L1",
+        "reason": "Policy: Confirmed unauthorized use; exposure $77.07"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Confirmed unauthorized activity; internal case created"
+      }
+    ],
+    "what_changed": "Customer denial and graph evidence increased fraud confidence to 0.89, escalating action to BLOCK_CARD with CREATE_CASE under Policy Rules."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Policy: Activity does not meet SAR filing criteria (legitimate or sub-threshold)",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0.0,
+    "activity_dates": []
+  },
+  "stop_reason": "Concurrent in-person transactions in distant billing regions confirm card cloning.",
+  "tool_calls": 5,
+  "tokens": 4000,
+  "latency_s": 0.13
+}

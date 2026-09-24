@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TigerGraph | Agentic Fraud Investigation Studio</title>
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Local Vis.js Network Script -->
+    <script type="text/javascript" src="/static/vis-network.min.js"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="dark-theme">
+    <!-- Top Cyber Navbar -->
+    <header class="studio-header">
+        <div class="brand-container">
+            <div class="brand-logo">
+                <span class="tg-hex">TG</span>
+            </div>
+            <div class="brand-title">
+                <h1>TIGERGRAPH <span class="highlight">FRAUD INVESTIGATION STUDIO</span></h1>
+                <div class="brand-subtitle">Autonomous Multi-Agent Investigation & Next-Best Action Engine</div>
+            </div>
+        </div>
+
+        <!-- Telemetry Indicators -->
+        <div class="header-telemetry">
+            <div class="status-chip" id="engineStatusChip">
+                <span class="pulse-dot"></span>
+                <span id="engineStatusText">TigerGraph GSQL Engine: Online</span>
+            </div>
+            <div class="telemetry-stat">
+                <span class="stat-num" id="statBenchmark">20</span>
+                <span class="stat-lbl">Exam Alerts</span>
+            </div>
+            <div class="telemetry-stat danger">
+                <span class="stat-num" id="statFraud">12</span>
+                <span class="stat-lbl">Confirmed Fraud</span>
+            </div>
+            <div class="telemetry-stat success">
+                <span class="stat-num" id="statLegit">8</span>
+                <span class="stat-lbl">Cleared Legit</span>
+            </div>
+            <div class="telemetry-stat warning">
+                <span class="stat-num" id="statExposure">$2,774.70</span>
+                <span class="stat-lbl">Exposure Handled</span>
+            </div>
+            <div class="telemetry-stat purple">
+                <span class="stat-num" id="statSAR">10</span>
+                <span class="stat-lbl">FinCEN SARs</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="studio-workspace">
+        <!-- Column 1: Case Queue & Threat Feed -->
+        <aside class="sidebar-case-queue">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-list-check"></i> Benchmark Alert Queue</h3>
+                <span class="badge" id="caseCountBadge">20 Cases</span>
+            </div>
+            <div class="search-filter-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="caseSearchInput" placeholder="Filter by Case, Customer, Pattern...">
+            </div>
+            <div class="queue-filter-chips">
+                <button class="q-chip active" data-filter="all">All (20)</button>
+                <button class="q-chip danger" data-filter="fraud">Fraud (12)</button>
+                <button class="q-chip success" data-filter="legitimate">Legit (8)</button>
+                <button class="q-chip warning" data-filter="syndicate">Rings (3)</button>
+            </div>
+            <div class="case-list-scroll" id="caseListContainer">
+                <!-- Injected via JavaScript -->
+            </div>
+        </aside>
+
+        <!-- Column 2: Center Interactive Knowledge Graph Canvas -->
+        <section class="stage-graph-canvas">
+            <div class="panel-header glass-header">
+                <div class="graph-title-group">
+                    <h3><i class="fa-solid fa-circle-nodes"></i> TigerGraph Knowledge Subgraph</h3>
+                    <span class="tag-pill" id="graphActiveCaseTag">Active: HHG-014</span>
+                    <button class="tag-pill syndicate-pill" id="syndicateAlertTag" style="display:none;" title="Click to focus & inspect Syndicate Ring in graph"><i class="fa-solid fa-triangle-exclamation"></i> 51-Card Syndicate Ring</button>
+                </div>
+                <div class="graph-actions">
+                    <button class="btn-icon" id="btnFitGraph" title="Fit Graph"><i class="fa-solid fa-compress"></i></button>
+                    <button class="btn-icon" id="btnTogglePhysics" title="Toggle Force Physics"><i class="fa-solid fa-atom"></i></button>
+                    <button class="btn-primary-sm" id="btnRerunInvestigate"><i class="fa-solid fa-bolt"></i> Re-Run Agent</button>
+                </div>
+            </div>
+
+            <!-- Vis.js Graph Viewport -->
+            <div class="network-canvas-container" id="networkCanvas"></div>
+
+            <!-- Floating Entity Inspector Drawer -->
+            <div class="node-inspector" id="nodeInspector" style="display:none;">
+                <div class="inspector-header">
+                    <span id="inspectorTitle"><i class="fa-solid fa-circle-info"></i> Entity Inspector</span>
+                    <button class="btn-close-inspector" id="btnCloseInspector">&times;</button>
+                </div>
+                <div class="inspector-body" id="inspectorBody">
+                    Click any node in the graph to inspect properties.
+                </div>
+            </div>
+
+            <!-- Legend Overlay -->
+            <div class="graph-legend">
+                <div class="legend-item"><span class="legend-dot customer-dot"></span> Customer</div>
+                <div class="legend-item"><span class="legend-dot card-dot"></span> Card</div>
+                <div class="legend-item"><span class="legend-dot txn-dot"></span> Flagged Txn</div>
+                <div class="legend-item"><span class="legend-dot device-dot"></span> Device Profile</div>
+                <div class="legend-item"><span class="legend-dot syndicate-dot"></span> Syndicate Ring</div>
+                <div class="legend-item"><span class="legend-dot writeback-dot"></span> Graph Memory</div>
+            </div>
+
+            <!-- Bottom GSQL Live Query Console -->
+            <div class="gsql-console-panel">
+                <div class="console-tab-header">
+                    <span><i class="fa-solid fa-terminal"></i> TigerGraph GSQL Query Console</span>
+                    <span class="query-lat-badge" id="gsqlLatencyBadge">Latency: 14ms</span>
+                </div>
+                <pre class="gsql-code-box" id="gsqlCodeBox">
+// Executing TigerGraph GSQL Algorithm
+device_neighbors(device_id = "SM-G935F Build/NRD90M | Android 7.0 | chrome 62.0 for android | 1920x1080")
+--> Traversed 2-hops: 114 transactions across 52 distinct cardholders identified on single hardware signature.
+                </pre>
+            </div>
+        </section>
+
+        <!-- Column 3: Investigation Progression, Next-Best Action & SAR Panel -->
+        <aside class="sidebar-investigation-flow">
+            <!-- Nav Tabs -->
+            <div class="tab-nav-bar">
+                <button class="tab-btn active" data-tab="tab-progression"><i class="fa-solid fa-route"></i> Progression</button>
+                <button class="tab-btn" data-tab="tab-sar"><i class="fa-solid fa-file-shield"></i> SAR Filing</button>
+                <button class="tab-btn" data-tab="tab-memory"><i class="fa-solid fa-brain"></i> Case Memory</button>
+                <button class="tab-btn" data-tab="tab-policy"><i class="fa-solid fa-scale-balanced"></i> Governance</button>
+            </div>
+
+            <div class="tab-content-container">
+                <!-- Tab 1: Progression & NBA -->
+                <div class="tab-pane active" id="tab-progression">
+                    <div class="verdict-banner" id="verdictBanner">
+                        <div class="verdict-status-row">
+                            <span class="verdict-title" id="verdictTitle">FRAUD CONFIRMED</span>
+                            <span class="verdict-prob" id="verdictProb">P(Fraud): 0.95</span>
+                        </div>
+                        <div class="verdict-meta" id="verdictMeta">Pattern: `undocumented` | Exposure: $74.96</div>
+                    </div>
+
+                    <!-- Step-by-Step Flow Stepper -->
+                    <div class="stepper-container">
+                        <div class="stepper-step completed">
+                            <div class="step-num">1</div>
+                            <div class="step-info">
+                                <div class="step-label">Trigger Ingestion</div>
+                                <div class="step-detail" id="stepTriggerDetail">Analyst request: several cards this month show purchases from the same unusual device profile.</div>
+                            </div>
+                        </div>
+
+                        <div class="stepper-step completed">
+                            <div class="step-num">2</div>
+                            <div class="step-info">
+                                <div class="step-label">Graph Traversal & Syndicate Detection</div>
+                                <div class="step-detail" id="stepGraphDetail">2-hop traversal located 52 connected customer cards sharing emulator hardware.</div>
+                            </div>
+                        </div>
+
+                        <div class="stepper-step completed">
+                            <div class="step-num">3</div>
+                            <div class="step-info">
+                                <div class="step-label">Initial Next-Best Actions (Pre-Evidence)</div>
+                                <div class="action-pills-list" id="initialActionPills">
+                                    <!-- Injected -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stepper-step completed">
+                            <div class="step-num">4</div>
+                            <div class="step-info">
+                                <div class="step-label">Controlled Evidence Gathering</div>
+                                <div class="step-detail" id="stepEvidenceDetail">Analyst verified multi-account device syndication.</div>
+                            </div>
+                        </div>
+
+                        <div class="stepper-step completed highlighted-step">
+                            <div class="step-num">5</div>
+                            <div class="step-info">
+                                <div class="step-label">Final Actions & Approval Routing</div>
+                                <div class="action-pills-list" id="finalActionPills">
+                                    <!-- Injected -->
+                                </div>
+                                <div class="what-changed-box" id="whatChangedText">What Changed: Actions settled after evidence evaluation.</div>
+                            </div>
+                        </div>
+
+                        <div class="stepper-step completed">
+                            <div class="step-num"><i class="fa-solid fa-database"></i></div>
+                            <div class="step-info">
+                                <div class="step-label">Dynamic TigerGraph Writeback</div>
+                                <div class="step-detail" id="stepWritebackDetail">Committed to graph memory as vertex FraudCase:CASE-2016-9014.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Items Accordion/List -->
+                    <div class="evidence-section">
+                        <div class="section-title"><i class="fa-solid fa-magnifying-glass-chart"></i> Graph Evidence Traversal Chain</div>
+                        <div class="evidence-list" id="evidenceList">
+                            <!-- Injected via JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 2: SAR Filing View -->
+                <div class="tab-pane" id="tab-sar">
+                    <div class="sar-header-card" id="sarHeaderBanner">
+                        <div class="sar-seal">
+                            <i class="fa-solid fa-landmark-flag"></i>
+                        </div>
+                        <div class="sar-seal-text">
+                            <h3>FINANCIAL CRIMES ENFORCEMENT NETWORK</h3>
+                            <div class="sar-sub">Suspicious Activity Report (FinCEN Form 111 / BSA 31 CFR 1020.320)</div>
+                            <div class="sar-tier-alert" id="sarStatusText">Regulatory Filing Mandatory (Policy 3a)</div>
+                        </div>
+                    </div>
+
+                    <div class="sar-grid-meta">
+                        <div class="meta-field">
+                            <label>Filing Reason</label>
+                            <span id="sarReasonText">Confirmed fraud syndicate activity</span>
+                        </div>
+                        <div class="meta-field">
+                            <label>Total Exposure</label>
+                            <span id="sarExposureText">$74.96</span>
+                        </div>
+                        <div class="meta-field">
+                            <label>Date Range</label>
+                            <span id="sarDateText">2016-11-22</span>
+                        </div>
+                        <div class="meta-field">
+                            <label>Subject Entities</label>
+                            <span id="sarSubjectsText">C13487, C13487-K1</span>
+                        </div>
+                    </div>
+                    <div class="sar-narrative-container">
+                        <div class="narrative-bar">
+                            <span>FinCEN 5Ws/H Narrative Statement</span>
+                            <button class="btn-copy" id="btnCopySAR"><i class="fa-regular fa-copy"></i> Copy Narrative</button>
+                        </div>
+                        <div class="narrative-body" id="sarNarrativeBody">
+                            Loading narrative...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab 3: Case Memory (5,565 Closed Cases) -->
+                <div class="tab-pane" id="tab-memory">
+                    <div class="section-title"><i class="fa-solid fa-brain"></i> Historical Case Memory Precedents</div>
+                    <div class="memory-explanation">
+                        Retrieved via GraphRAG across 5,565 historical closed investigations to calibrate risk probabilities and anchor decisions.
+                    </div>
+                    <div class="prior-cases-list" id="priorCasesList">
+                        <!-- Injected -->
+                    </div>
+                </div>
+
+                <!-- Tab 4: Governance & Approval -->
+                <div class="tab-pane" id="tab-policy">
+                    <div class="section-title"><i class="fa-solid fa-scale-balanced"></i> Bank Fraud Policy v1.0 Governance</div>
+                    <div class="governance-grid">
+                        <div class="gov-card auto">
+                            <div class="gov-tier-header"><span class="badge-auto">AUTO</span> Agent Autonomous</div>
+                            <p>Non-destructive actions executed autonomously by the AI agent (e.g. ALLOW, MONITOR, CREATE_CASE).</p>
+                        </div>
+                        <div class="gov-card l1">
+                            <div class="gov-tier-header"><span class="badge-l1">L1</span> Team Lead Sign-off</div>
+                            <p>Authorizes DECLINE_TRANSACTION and card blocks with exposure &le; $2,500.</p>
+                        </div>
+                        <div class="gov-card l2">
+                            <div class="gov-tier-header"><span class="badge-l2">L2</span> Fraud Manager Sign-off</div>
+                            <p>Mandatory for regulatory SAR filings (FILE_REPORT), card blocks &gt; $2,500, and BLOCK_ALL_CARDS.</p>
+                        </div>
+                    </div>
+
+                    <div class="approval-station-box">
+                        <h4>Pending Human-In-The-Loop Authorizations</h4>
+                        <div id="pendingApprovalsList">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+
+                    <div class="policy-rules-matrix">
+                        <h4>Policy Rules Matrix Enforced</h4>
+                        <div class="rules-table-container">
+                            <table class="rules-table">
+                                <thead>
+                                    <tr>
+                                        <th>Rule</th>
+                                        <th>Condition</th>
+                                        <th>Required Actions</th>
+                                        <th>Route</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>R1</code></td>
+                                        <td>Single risk signal (uncertain)</td>
+                                        <td>CREATE_CASE, VERIFY_CUSTOMER</td>
+                                        <td><span class="badge-auto">auto</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R2</code></td>
+                                        <td>Account takeover / new device</td>
+                                        <td>BLOCK_CARD, VERIFY_CUSTOMER</td>
+                                        <td><span class="badge-l1">L1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R3</code></td>
+                                        <td>Customer unauthorized confirmation</td>
+                                        <td>BLOCK_CARD, FILE_REPORT</td>
+                                        <td><span class="badge-l2">L2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R4</code></td>
+                                        <td>Customer authorized / legitimate</td>
+                                        <td>ALLOW_TRANSACTION, CLOSE_NO_FRAUD</td>
+                                        <td><span class="badge-auto">auto</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R5</code></td>
+                                        <td>Multi-card burst pattern</td>
+                                        <td>BLOCK_ALL_CARDS, FILE_REPORT</td>
+                                        <td><span class="badge-l2">L2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R6</code></td>
+                                        <td>Syndicate device sharing (&ge;5 cards)</td>
+                                        <td>BLOCK_CARD, MONITOR_CONNECTED</td>
+                                        <td><span class="badge-l1">L1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R7</code></td>
+                                        <td>Disputed recurring billing</td>
+                                        <td>WARN_CUSTOMER, ALLOW_TXN</td>
+                                        <td><span class="badge-auto">auto</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R8</code></td>
+                                        <td>Rapid geographic dispersion</td>
+                                        <td>DECLINE_TXN, VERIFY_CUSTOMER</td>
+                                        <td><span class="badge-l1">L1</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R9</code></td>
+                                        <td>Regulatory SAR mandatory</td>
+                                        <td>FILE_REPORT (5Ws/H FinCEN)</td>
+                                        <td><span class="badge-l2">L2</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>R10</code></td>
+                                        <td>Dynamic graph writeback</td>
+                                        <td>Graph memory commit vertex</td>
+                                        <td><span class="badge-auto">auto</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+{
+  "case_id": "HHG-002",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.14,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "Transaction of $292.36 is consistent with cardholder's established billing region (nan) and historical behavior",
+        "source": "graph",
+        "ref": "query:customer_card_profile(customer_id='C11891')",
+        "entity_ids": [
+          "3478782"
+        ]
+      },
+      {
+        "claim": "Cardholder validated the transaction upon step-up verification",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": []
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-4160"
+    ],
+    "summary": "Investigation for HHG-002 on card C11891-K1 (Customer C11891) concluded with verdict 'legitimate' and pattern 'none'. Assessed fraud probability is 0.14 with total exposure of $0.00. Recommended actions: ALLOW_TRANSACTION, CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9002"
+  },
+  "evidence_requests": [
+    {
+      "type": "step_up_auth",
+      "asked_after_step": 2,
+      "assumed_response": "Cardholder successfully completed two-factor biometric verification."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R1: Probability below 0.70 on single signal; verify before blocking"
+      },
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "Policy 3a: Open internal case as fraud probability >= 0.30"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: Customer confirmed transaction was authorized"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: Closed as legitimate following customer confirmation"
+      }
+    ],
+    "what_changed": "Cardholder confirmation resolved initial ambiguity, clearing the alert to CLOSE_NO_FRAUD without adverse customer impact."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Policy: Activity does not meet SAR filing criteria (legitimate or sub-threshold)",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0.0,
+    "activity_dates": []
+  },
+  "stop_reason": "Customer confirmation and graph analysis verified benign cardholder authorization.",
+  "tool_calls": 5,
+  "tokens": 4000,
+  "latency_s": 0.04
+}

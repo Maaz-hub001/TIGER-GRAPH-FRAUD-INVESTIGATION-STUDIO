@@ -1,0 +1,7 @@
+pyTigerGraph>=2.0.4
+pandas>=2.0.0
+numpy>=1.24.0
+networkx>=3.0
+streamlit>=1.30.0
+requests>=2.31.0
+python-dotenv>=1.0.0

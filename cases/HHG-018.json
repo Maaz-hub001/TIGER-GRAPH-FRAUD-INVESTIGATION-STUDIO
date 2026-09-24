@@ -1,0 +1,96 @@
+{
+  "case_id": "HHG-018",
+  "case": {
+    "status": "closed_legitimate",
+    "verdict": "legitimate",
+    "fraud_probability": 0.12,
+    "pattern": "none",
+    "pattern_description": "",
+    "affected_txn_ids": [],
+    "first_suspicious_txn_id": "",
+    "connected_card_ids": [],
+    "connected_device_profiles": [],
+    "exposure_usd": 0.0,
+    "evidence": [
+      {
+        "claim": "Flagged charge of $39.08 matches customer's established recurring monthly payment schedule (32 identical historical transactions)",
+        "source": "graph",
+        "ref": "query:customer_card_profile(customer_id='C02354')",
+        "entity_ids": [
+          "3014994",
+          "3035437",
+          "3078810",
+          "3127738"
+        ]
+      },
+      {
+        "claim": "Customer reported charge under mistaken identity or unrecognized merchant descriptor; confirmed recurring subscription upon review",
+        "source": "customer",
+        "ref": "evidence_request:1",
+        "entity_ids": [
+          "3491361"
+        ]
+      }
+    ],
+    "similar_prior_cases": [
+      "CC-0255",
+      "CC-0405",
+      "CC-0454",
+      "CC-0631"
+    ],
+    "summary": "Investigation for HHG-018 on card C02354-K2 (Customer C02354) concluded with verdict 'legitimate' and pattern 'none'. Assessed fraud probability is 0.12 with total exposure of $0.00. Recommended actions: ALLOW_TRANSACTION, CLOSE_NO_FRAUD.",
+    "written_to_graph": true,
+    "graph_case_id": "CASE-2016-9018"
+  },
+  "evidence_requests": [
+    {
+      "type": "customer_validation",
+      "asked_after_step": 2,
+      "assumed_response": "Customer recognizes merchant descriptor after recurring charge notification and confirms subscription."
+    }
+  ],
+  "next_best_actions": {
+    "initial": [
+      {
+        "action": "CREATE_CASE",
+        "route": "auto",
+        "reason": "R7: Customer dispute on matching recurring charge pattern"
+      },
+      {
+        "action": "VERIFY_WITH_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: Confirm recurring subscription with customer"
+      },
+      {
+        "action": "WARN_CUSTOMER",
+        "route": "auto",
+        "reason": "R7: Provide recurring charge reminder without blocking card"
+      }
+    ],
+    "final": [
+      {
+        "action": "ALLOW_TRANSACTION",
+        "route": "auto",
+        "reason": "R3: Customer confirmed transaction was authorized"
+      },
+      {
+        "action": "CLOSE_NO_FRAUD",
+        "route": "auto",
+        "reason": "R3: Closed as legitimate following customer confirmation"
+      }
+    ],
+    "what_changed": "Cardholder confirmation resolved initial ambiguity, clearing the alert to CLOSE_NO_FRAUD without adverse customer impact."
+  },
+  "sar": {
+    "file": false,
+    "reason": "Policy: Activity does not meet SAR filing criteria (legitimate or sub-threshold)",
+    "narrative": "",
+    "subjects": [],
+    "total_amount_usd": 0.0,
+    "activity_dates": []
+  },
+  "stop_reason": "Customer disputed regular recurring charge matching historical billing schedule (Rule R7).",
+  "tool_calls": 5,
+  "tokens": 4000,
+  "latency_s": 0.18
+}
